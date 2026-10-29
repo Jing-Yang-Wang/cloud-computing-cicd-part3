@@ -1,0 +1,20 @@
+name: Go Docker CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker test image
+        run: docker build -f Dockerfile.test -t go-api-test .
+
+      - name: Run Docker tests
+        run: docker run --rm go-api-test
