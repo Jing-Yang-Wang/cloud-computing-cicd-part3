@@ -1,3 +1,4 @@
+
 name: Go Docker CI
 
 on:
@@ -18,3 +19,37 @@ jobs:
 
       - name: Run Docker tests
         run: docker run --rm go-api-test
+
+      - name: Send Slack notification
+        if: always()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          JOB_STATUS: ${{ job.status }}
+          REPOSITORY: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -n "$SLACK_WEBHOOK_URL" ]; then
+            python3 - <<'PY' > /tmp/slack-payload.json
+          import json
+          import os
+
+          status = os.environ["JOB_STATUS"]
+          message = {
+              "text": (
+                  f"GitHub Actions - Go Docker CI\n"
+                  f"Repository: {os.environ['REPOSITORY']}\n"
+                  f"Status: {status}\n"
+                  f"Summary: Docker build and Go unit tests completed with status: {status}\n"
+                  f"Run: {os.environ['RUN_URL']}"
+              )
+          }
+          print(json.dumps(message))
+          PY
+            curl --fail --silent --show-error \
+              -X POST \
+              -H 'Content-type: application/json' \
+              --data-binary @/tmp/slack-payload.json \
+              "$SLACK_WEBHOOK_URL"
+          else
+            echo "SLACK_WEBHOOK_URL is not configured."
+          fi
