@@ -14,11 +14,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Build Docker test image
-        run: docker build -f Dockerfile.test -t go-api-test .
+      - name: Start LocalStack
+        run: docker compose up -d localstack
 
-      - name: Run Docker tests
-        run: docker run --rm go-api-test
+      - name: Run Docker Compose tests
+        run: docker compose run --rm tests
+
+      - name: Stop Docker Compose services
+        if: always()
+        run: docker compose down
 
       - name: Send Slack notification
         if: always()

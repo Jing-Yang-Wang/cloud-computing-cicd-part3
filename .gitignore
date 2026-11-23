@@ -1,0 +1,5 @@
+# Ignore local Go executable
+/cloud-computing-cicd-part3
+
+# Ignore macOS system files
+.DS_Store
